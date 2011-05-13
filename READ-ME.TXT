@@ -1,0 +1,5 @@
+Download First IB Checking transactions to CSV
+Download First IB Bill Payment history to CSV
+These will open directly in FirstIB2Quicken
+Type checks into Word document with tabs. See Checks2010.doc, except type the dates in with the year. Save as a txt file.
+
