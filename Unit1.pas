@@ -2,6 +2,7 @@ unit Unit1;
 {
 01/24/10   RJS   Refactored btnReadPaymentClick: pulled QIF reading code out
                  into new procedure ReadQIFFile.
+05/13/11   RJS   Added support for Category.
 }
 
 
@@ -9,7 +10,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, ExtCtrls;
+  StdCtrls, ComCtrls, ExtCtrls, Mask, wwdbedit, Wwdotdot, Wwdbcomb;
 
 type
   TChkTrans = class
@@ -22,6 +23,7 @@ type
     Balance: Double;
     CheckNumber: Integer;
     Fees: Double;
+    Category: string;
   end;
 
   TPmtTrans = class
@@ -48,6 +50,9 @@ type
     btnWriteQIF: TButton;
     SaveDialog1: TSaveDialog;
     btnReadCheckbook: TButton;
+    cboCategory: TwwDBComboBox;
+    Label1: TLabel;
+    btnApply: TButton;
     procedure btnReadCheckingClick(Sender: TObject);
     procedure lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
@@ -71,6 +76,8 @@ type
       State: TDragState; var Accept: Boolean);
     procedure btnWriteQIFClick(Sender: TObject);
     procedure btnReadCheckbookClick(Sender: TObject);
+    procedure btnApplyClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
     slFileText: TStringList;
@@ -237,6 +244,7 @@ begin
       Add(DateToStr(Date));
       Add(Description);
       Add(Memo);
+      Add(Category);
       Add(AmtToStr(AmountDebit));
       Add(AmtToStr(AmountCredit));
       Add(AmtToStr(Balance));
@@ -366,6 +374,10 @@ begin
     Field1 := Trans1.Balance;
     Field2 := Trans2.Balance;
   end
+  else if ChkSortField = 'Category' then begin
+    Field1 := Trans1.Category;
+    Field2 := Trans2.Category;
+  end
   else if ChkSortField = 'Check No' then begin
     Field1 := Trans1.CheckNumber;
     Field2 := Trans2.CheckNumber;
@@ -437,6 +449,7 @@ begin
                  end;
                end;
           'P': Description := Copy(S, 2, 80);
+          'L': Category := Copy(S, 2, 80);
           'M': Memo := Copy(S, 2, 80);
           'N': if S[2] in ['0'..'9'] then
                  CheckNumber := StrToIntDef(Copy(S, 2, 10), 0);
@@ -744,6 +757,7 @@ begin
         slFileText.Add('U'+sAmount);
         slFileText.Add('T'+sAmount);
         slFileText.Add('P'+Description);
+        slFileText.Add('L'+Category);
         if Memo <> '' then
           slFileText.Add('M'+Memo);
         if CheckNumber <> 0 then
@@ -753,6 +767,35 @@ begin
     end;
     slFileText.SaveToFile(SaveDialog1.Filename)
   end;
+end;
+
+procedure TForm1.btnApplyClick(Sender: TObject);
+var
+  CT: TChkTrans;
+  L: TListItem;
+  I, N: Integer;
+begin
+  with lvChecking do begin
+    if (SelCount > 0) and (cboCategory.ItemIndex <> -1) then begin
+      I := SelCount;
+      N := Items.IndexOf(Selected);
+      while I > 0 do begin
+        L := Items[N];
+        if L.Selected then begin
+          CT := TChkTrans(L.Data);
+          CT.Category := cboCategory.Text;
+          CopyChkTransToListItem(CT, L);
+          Dec(I);
+        end;
+        Inc(N);
+      end;
+    end;
+  end;
+end;
+
+procedure TForm1.FormShow(Sender: TObject);
+begin
+  cboCategory.Items.LoadFromFile('categories.txt');
 end;
 
 end.

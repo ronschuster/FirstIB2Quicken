@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 42
-  Top = 235
-  Width = 947
+  Left = 190
+  Top = 234
+  Width = 1000
   Height = 533
   Caption = 'Form1'
   Color = clBtnFace
@@ -13,24 +13,32 @@ object Form1: TForm1
   OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
-    Left = 561
+    Left = 641
     Top = 41
-    Width = 3
+    Width = 5
     Height = 458
     Cursor = crHSplit
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 939
+    Width = 992
     Height = 41
     Align = alTop
     TabOrder = 0
+    object Label1: TLabel
+      Left = 544
+      Top = 14
+      Width = 42
+      Height = 13
+      Caption = 'Category'
+    end
     object btnReadChecking: TButton
-      Left = 32
+      Left = 8
       Top = 8
       Width = 121
       Height = 25
@@ -39,7 +47,7 @@ object Form1: TForm1
       OnClick = btnReadCheckingClick
     end
     object btnCleanup: TButton
-      Left = 168
+      Left = 128
       Top = 8
       Width = 75
       Height = 25
@@ -48,7 +56,7 @@ object Form1: TForm1
       OnClick = btnCleanupClick
     end
     object btnReadPayment: TButton
-      Left = 264
+      Left = 200
       Top = 8
       Width = 129
       Height = 25
@@ -57,7 +65,7 @@ object Form1: TForm1
       OnClick = btnReadPaymentClick
     end
     object btnWriteQIF: TButton
-      Left = 552
+      Left = 456
       Top = 8
       Width = 75
       Height = 25
@@ -66,7 +74,7 @@ object Form1: TForm1
       OnClick = btnWriteQIFClick
     end
     object btnReadCheckbook: TButton
-      Left = 408
+      Left = 328
       Top = 8
       Width = 129
       Height = 25
@@ -74,11 +82,40 @@ object Form1: TForm1
       TabOrder = 4
       OnClick = btnReadCheckbookClick
     end
+    object cboCategory: TwwDBComboBox
+      Left = 592
+      Top = 10
+      Width = 209
+      Height = 21
+      ShowButton = True
+      Style = csDropDown
+      MapList = False
+      AllowClearKey = False
+      DropDownCount = 8
+      HistoryList.Section = 'Categories'
+      HistoryList.FileName = 'FirstIB2Quicken.INI'
+      HistoryList.Enabled = True
+      HistoryList.MRUEnabled = True
+      HistoryList.MRUMaxSize = 5
+      ItemHeight = 0
+      Sorted = False
+      TabOrder = 5
+      UnboundDataType = wwDefault
+    end
+    object btnApply: TButton
+      Left = 800
+      Top = 8
+      Width = 41
+      Height = 25
+      Caption = 'Apply'
+      TabOrder = 6
+      OnClick = btnApplyClick
+    end
   end
   object pnlChecking: TPanel
     Left = 0
     Top = 41
-    Width = 561
+    Width = 641
     Height = 458
     Align = alLeft
     BorderWidth = 8
@@ -88,7 +125,7 @@ object Form1: TForm1
     object lvChecking: TListView
       Left = 9
       Top = 9
-      Width = 543
+      Width = 623
       Height = 440
       Align = alClient
       Columns = <
@@ -102,11 +139,14 @@ object Form1: TForm1
         end
         item
           Caption = 'Desc'
-          Width = 100
+          Width = 75
         end
         item
           Caption = 'Memo'
-          Width = 100
+          Width = 75
+        end
+        item
+          Caption = 'Category'
         end
         item
           Caption = 'Debit'
@@ -127,6 +167,8 @@ object Form1: TForm1
         item
           Caption = 'Fees'
         end>
+      HideSelection = False
+      MultiSelect = True
       RowSelect = True
       TabOrder = 0
       ViewStyle = vsReport
@@ -137,9 +179,9 @@ object Form1: TForm1
     end
   end
   object Panel3: TPanel
-    Left = 564
+    Left = 646
     Top = 41
-    Width = 375
+    Width = 346
     Height = 458
     Align = alClient
     BorderWidth = 8
@@ -147,7 +189,7 @@ object Form1: TForm1
     object lvPayments: TListView
       Left = 9
       Top = 9
-      Width = 357
+      Width = 328
       Height = 440
       Align = alClient
       Columns = <
@@ -188,7 +230,7 @@ object Form1: TForm1
   object Timer1: TTimer
     Interval = 100
     OnTimer = Timer1Timer
-    Left = 768
+    Left = 896
     Top = 8
   end
   object SaveDialog1: TSaveDialog
