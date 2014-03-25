@@ -1,5 +1,62 @@
-Download First IB Checking transactions to CSV
-Download First IB Bill Payment history to CSV
-These will open directly in FirstIB2Quicken
-Type checks into Word document with tabs. See Checks2010.doc, except type the dates in with the year. Save as a txt file.
+Download First IB Checking transactions to CSV: 
+  Select Export History on the menu
+  Enter the desired date range
+  Choose CSV for export format 
+  Click Download Data
+  Save file to My Documents\Financial with a unique filename (e.g. FirstIB_2011.csv)
+Download First IB Bill Payment history to CSV:
+  Select BILL PAYMENT on the menu.
+  Click View Bill History at the bottom of the Recent Payments pane.
+  In Current View select the desired date range.
+  Click Download Payments
+  Save file to My Documents\Financial with a unique filename (e.g. bill payment 2011.csv)
+*** this includes pending and processing transactions which should probably be filtered out.
+
+Type checks into Word document with tabs. See Checks2011.docx. Save as a txt file.
+
+Discover card transactions:
+  Select the Search Transactions tab
+  In Date dropdown select Date Range.
+  Enter the desired date range
+  Click Search
+  Click Download
+  Save as CSV
+
+DollarBank transactions:
+  Select Activity tab
+  In Download Criteria section, check Activity Download, and select CSV.
+  Click Continue
+  Select the desired transactions and click Download Selected, or click Download All
+  If there's more than one page, download each to a separate file. 
+  If you downloaded more than one file use a spreasheet program to create a single file with the desired range of dates. 
+
+Run C:\Delphi projects\FirstIB2Quicken\Banks2Quicken.exe
+
+NOTE: If you need to save your work at any time, you can click Write QIF file to save your work. To read the file back in select 'Read checking file' select *.qif in the Files of type dropdown and select your file.
+
+Click "Read checking file" and select the First IB Checking transactions file
+Click "Clean'em up"
+Click Trans No column heading to sort transaction ascending by date
+Click "Read bill payment file" and select the First IB Bill Payment history file
+Click Date column heading to sort bill payment transactions ascending by date
+Drag each bill payment over to its corresponding checking account transaction
+Click "Read checking file" and select the First IB Checking transactions file
+Drag each check over to its corresponding checking account transaction
+Click Write QIF file. Enter a filename for QIF file. (e.g., FirstIB2Quicken_2011.QIF)
+
+Click "Read Discover file" and select the Discover card transactions file
+Click Write QIF file. Enter a filename for QIF file. (e.g., Discover2Quicken_2011.QIF)
+
+Click "Read DollarBank file" and select the DollarBank transactions file
+Click "Clean'em up"
+Click Write QIF file. Enter a filename for QIF file. (e.g., DollarBank2Quicken_2011.QIF)
+
+Import QIF files into Quicken, each into its corresponding account.  
+  Select File - Import - QIF file
+  Select Quicken Account to Import into
+  Select QIF file to Import
+  Click OK
+  Right click on a transaction and select "Make All Transactions New"
+  Click Accept All
+
 

@@ -1,6 +1,6 @@
 object Form1: TForm1
-  Left = 190
-  Top = 234
+  Left = 30
+  Top = 178
   Width = 1000
   Height = 533
   Caption = 'Form1'
@@ -31,7 +31,7 @@ object Form1: TForm1
     Align = alTop
     TabOrder = 0
     object Label1: TLabel
-      Left = 544
+      Left = 680
       Top = 14
       Width = 42
       Height = 13
@@ -40,50 +40,50 @@ object Form1: TForm1
     object btnReadChecking: TButton
       Left = 8
       Top = 8
-      Width = 121
+      Width = 99
       Height = 25
       Caption = 'Read checking file'
       TabOrder = 0
       OnClick = btnReadCheckingClick
     end
     object btnCleanup: TButton
-      Left = 128
+      Left = 107
       Top = 8
-      Width = 75
+      Width = 67
       Height = 25
       Caption = 'Clean'#39'em up'
       TabOrder = 1
       OnClick = btnCleanupClick
     end
     object btnReadPayment: TButton
-      Left = 200
+      Left = 273
       Top = 8
-      Width = 129
+      Width = 111
       Height = 25
       Caption = 'Read bill payment  file'
       TabOrder = 2
       OnClick = btnReadPaymentClick
     end
     object btnWriteQIF: TButton
-      Left = 456
+      Left = 600
       Top = 8
-      Width = 75
+      Width = 69
       Height = 25
       Caption = 'Write QIF file'
       TabOrder = 3
       OnClick = btnWriteQIFClick
     end
     object btnReadCheckbook: TButton
-      Left = 328
+      Left = 385
       Top = 8
-      Width = 129
+      Width = 110
       Height = 25
       Caption = 'Read checkbook file'
       TabOrder = 4
       OnClick = btnReadCheckbookClick
     end
     object cboCategory: TwwDBComboBox
-      Left = 592
+      Left = 728
       Top = 10
       Width = 209
       Height = 21
@@ -103,13 +103,31 @@ object Form1: TForm1
       UnboundDataType = wwDefault
     end
     object btnApply: TButton
-      Left = 800
+      Left = 936
       Top = 8
       Width = 41
       Height = 25
       Caption = 'Apply'
       TabOrder = 6
       OnClick = btnApplyClick
+    end
+    object btnReadDiscoverFile: TButton
+      Left = 175
+      Top = 8
+      Width = 97
+      Height = 25
+      Caption = 'Read Discover file'
+      TabOrder = 7
+      OnClick = btnReadDiscoverFileClick
+    end
+    object btnReadDollarBankFile: TButton
+      Left = 497
+      Top = 8
+      Width = 100
+      Height = 25
+      Caption = 'Read DollarBankfile'
+      TabOrder = 8
+      OnClick = btnReadDollarBankFileClick
     end
   end
   object pnlChecking: TPanel
@@ -231,7 +249,7 @@ object Form1: TForm1
     Interval = 100
     OnTimer = Timer1Timer
     Left = 896
-    Top = 8
+    Top = 32
   end
   object SaveDialog1: TSaveDialog
     DefaultExt = 'QIF'

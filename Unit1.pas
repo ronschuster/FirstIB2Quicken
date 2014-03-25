@@ -3,6 +3,8 @@ unit Unit1;
 01/24/10   RJS   Refactored btnReadPaymentClick: pulled QIF reading code out
                  into new procedure ReadQIFFile.
 05/13/11   RJS   Added support for Category.
+05/13/11   RJS   Added Read Discover button
+12/15/12   RJS   Added Read DollarBankfile button
 }
 
 
@@ -53,6 +55,8 @@ type
     cboCategory: TwwDBComboBox;
     Label1: TLabel;
     btnApply: TButton;
+    btnReadDiscoverFile: TButton;
+    btnReadDollarBankFile: TButton;
     procedure btnReadCheckingClick(Sender: TObject);
     procedure lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
@@ -78,6 +82,8 @@ type
     procedure btnReadCheckbookClick(Sender: TObject);
     procedure btnApplyClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure btnReadDiscoverFileClick(Sender: TObject);
+    procedure btnReadDollarBankFileClick(Sender: TObject);
   private
     { Private declarations }
     slFileText: TStringList;
@@ -87,7 +93,7 @@ type
     procedure CopyPmtTransToListItem(T:TChkTrans; L:TListItem);
     procedure ReadQIFFile(Filename: string; ListView: TListView;
       CopyTransToListItem: TCopyTransToListItem);
-    procedure ClearListView(LV: TListView);
+    function ClearListView(LV: TListView): Boolean;
     function GetField(InStr: string; var Pos: Integer): string;
   public
     { Public declarations }
@@ -156,21 +162,30 @@ var
   end;
 *)
 const
-  Phrase: array[1..4] of string = (
+  PhraseSet1: array[1..7] of string = (
+    //FirstIB
     'External Deposit',
     'External Withdrawal',
     'Point Of Sale Deposit',
-    'Point Of Sale Withdrawal');
+    'Point Of Sale Withdrawal',
+    //DollarBank
+    'POS-PIN',
+    'POS-MC',
+    'DIR');
+
+  PhraseSet2: array[1..2] of string = (
+    'ATM Withdrawal',
+    'ATM Deposit');
 begin
-{ For all of these phrases, if phrase found at beginning of Desc, delete the phrase
-  from Desc. If remaining Desc is not blank, add a space. Append Memo to end of Desc }
   Trans := TChkTrans(Item.Data);
   Desc := Trans.Description;
   Memo := Trans.Memo;
 
-  for I := 1 to 4 do
-    if Pos(Phrase[I], Desc) = 1 then begin
-      Delete(Desc, 1, Length(Phrase[I])+1);
+{ PhraseSet1: For all of these phrases, if phrase found at beginning of Desc, delete the phrase
+  from Desc. If remaining Desc is not blank, add a space. Append Memo to end of Desc }
+  for I := 1 to High(PhraseSet1) do
+    if Pos(PhraseSet1[I], Desc) = 1 then begin
+      Delete(Desc, 1, Length(PhraseSet1[I])+1);
       if Desc <> '' then
         Desc := Desc + ' ';
       Trans.Description := Desc + Memo;
@@ -178,6 +193,15 @@ begin
       Break;
     end;
 
+{ PhraseSet2: For all of these phrases, if phrase found at beginning of Desc,
+  leave the phrase at beginning of Desc, and remove the remainder of the Desc
+  and insert it and the beginning of Memo }
+  for I := 1 to 2 do
+    if Pos(PhraseSet2[I], Desc) = 1 then begin
+      Trans.Description := PhraseSet2[I];
+      Trans.Memo := Copy(Desc, Length(PhraseSet2[I])+2, 255) + ' ' + Memo;
+      Break;
+    end;
 (*
   NewMemo := '';
   Pos := 1;
@@ -256,7 +280,7 @@ end;
 
 function StrToAmt(S: string): Double;
 begin
-  if S = '' then
+  if Trim(S) = '' then
     Result := 0
   else
     Result := StrToFloat(FilterL(S,','));
@@ -276,13 +300,20 @@ begin
   end;
 end;
 
-procedure TForm1.ClearListView(LV: TListView);
+function TForm1.ClearListView(LV: TListView): Boolean;
 var
   I: Integer;
 begin
-  for I := 0 to LV.Items.Count-1 do
-    TChkTrans(LV.Items[I]).Free;
-  LV.Items.Clear;
+  if LV.Items.Count = 0 then
+    Result := True
+  else begin
+    Result := MessageDlg('This will clear all transations currently in the list. Do you want to continue?', mtConfirmation, [mbYes, mbNo], 0) = mrYes;
+    if Result then begin
+      for I := 0 to LV.Items.Count-1 do
+        TChkTrans(LV.Items[I]).Free;
+      LV.Items.Clear;
+    end;
+  end;
 end;
 
 procedure TForm1.btnReadCheckingClick(Sender: TObject);
@@ -320,6 +351,8 @@ procedure TForm1.btnReadCheckingClick(Sender: TObject);
 var
   I: Integer;
   Filename: string;
+const
+  TitleLines = 5;  //number of lines before the column heading line
 begin
   OpenDialog1.Filter := '*.csv|*.csv|*.qif|*.qif';
   if OpenDialog1.Execute then begin
@@ -327,15 +360,66 @@ begin
     if SameText(ExtractFileEXt(Filename), '.qif') then
       ReadQIFFile(Filename, lvChecking, CopyChkTransToListItem)
     else begin
-      ClearListView(lvChecking);
+      if not ClearListView(lvChecking) then
+        Exit;
       slFileText.LoadFromFile(Filename);
       Delimiter := ',';
-      if slFileText[5] <> 'Transaction Number,Date,Description,Memo,Amount Debit,Amount Credit,Balance,Check Number,Fees' then
+      if FilterL(slFileText[TitleLines],' ') <> 'TransactionNumber,Date,Description,Memo,AmountDebit,AmountCredit,Balance,CheckNumber,Fees' then
         raise Exception.Create('Invalid file input format');
-      for I := 6 to slFileText.Count-1 do
+      for I := TitleLines + 1 to slFileText.Count-1 do
         ProcessLine(slFileText[I]);
     end
   end;
+end;
+
+procedure TForm1.btnReadDiscoverFileClick(Sender: TObject);
+
+  procedure ProcessLine(S: string);
+  var
+    Pos: Integer;
+    ListItem: TListItem;
+    Trans: TChkTrans;
+  begin
+    if Length(S) = 0 then
+      Exit;
+
+    Pos := 1;
+    Trans := TChkTrans.Create;
+    with Trans do begin
+      Date := StrToDate(GetField(S,Pos));
+      GetField(S,Pos); //Post Date
+      Description := GetField(S,Pos);
+      AmountDebit := -1 * StrToAmt(GetField(S,Pos));
+      if AmountDebit > 0 then begin
+        AmountCredit := AmountDebit;
+        AmountDebit := 0;
+      end;
+      Category := GetField(S,Pos);
+
+      with lvChecking do begin
+        ListItem := Items.Add;
+        ListItem.Data := Trans;
+        CopyChkTransToListItem(Trans, ListItem);
+      end;
+    end;
+  end;
+
+var
+  I: Integer;
+  Filename: string;
+begin
+  OpenDialog1.Filter := '*.csv|*.csv';
+  if OpenDialog1.Execute then begin
+    Filename := OpenDialog1.Filename;
+    if not ClearListView(lvChecking) then
+      Exit;
+    slFileText.LoadFromFile(Filename);
+    Delimiter := ',';
+    if slFileText[0] <> 'Trans. Date,Post Date,Description,Amount,Category' then
+      raise Exception.Create('Invalid file input format');
+    for I := 1 to slFileText.Count-1 do
+      ProcessLine(slFileText[I]);
+  end
 end;
 
 procedure TForm1.lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
@@ -423,7 +507,8 @@ var
   ListItem: TListItem;
   S: string;
 begin
-  ClearListView(ListView);
+  if not ClearListView(ListView) then
+    Exit;
   slFileText.LoadFromFile(Filename);
   if slFileText[0] <> '!Type:Bank' then
     raise Exception.Create('Invalid file input format');
@@ -509,7 +594,7 @@ procedure TForm1.btnReadPaymentClick(Sender: TObject);
     Trans := TChkTrans.Create;
     with Trans do begin
       Date := StrToDate(GetField(S,Pos));
-      AmountDebit := -StrToAmt(GetField(S,Pos));
+      AmountDebit := -StrToAmt(FilterL(GetField(S,Pos),'$'));
       GetField(S,Pos);
       Memo := GetField(S,Pos);
       GetField(S,Pos);
@@ -530,7 +615,8 @@ begin
   OpenDialog1.Filter := '*.csv|*.csv';
   if OpenDialog1.Execute then begin
     Filename := OpenDialog1.Filename;
-    ClearListView(lvPayments);
+    if not ClearListView(lvPayments) then
+      Exit;
     slFileText.LoadFromFile(Filename);
     Delimiter := ',';
     for I := 1 to slFileText.Count-1 do
@@ -574,7 +660,8 @@ begin
     if SameText(ExtractFileEXt(Filename), '.qif') then
       ReadQIFFile(Filename, lvPayments, CopyPmtTransToListItem)
     else begin
-      ClearListView(lvPayments);
+      if not ClearListView(lvPayments) then
+        Exit;
       slFileText.LoadFromFile(Filename);
       Delimiter := #9;
       if slFileText[0] <> 'Chk#'#9'Date'#9'Payee'#9'Memo'#9'Amt' then
@@ -796,6 +883,53 @@ end;
 procedure TForm1.FormShow(Sender: TObject);
 begin
   cboCategory.Items.LoadFromFile('categories.txt');
+end;
+
+procedure TForm1.btnReadDollarBankFileClick(Sender: TObject);
+
+  procedure ProcessLine(S: string);
+  var
+    Pos: Integer;
+    ListItem: TListItem;
+    Trans: TChkTrans;
+  begin
+    if Length(S) = 0 then
+      Exit;
+
+    Pos := 1;
+    Trans := TChkTrans.Create;
+    with Trans do begin
+      Date := StrToDate(GetField(S,Pos));
+      Description := GetField(S,Pos);
+      AmountDebit := StrToAmt(GetField(S,Pos));
+      if AmountDebit > 0 then begin
+        AmountCredit := AmountDebit;
+        AmountDebit := 0;
+      end;
+
+      with lvChecking do begin
+        ListItem := Items.Add;
+        ListItem.Data := Trans;
+        CopyChkTransToListItem(Trans, ListItem);
+      end;
+    end;
+  end;
+
+var
+  I: Integer;
+  Filename: string;
+begin
+  OpenDialog1.Filter := '*.csv|*.csv';
+  if OpenDialog1.Execute then begin
+    Filename := OpenDialog1.Filename;
+    if not ClearListView(lvChecking) then
+      Exit;
+    slFileText.LoadFromFile(Filename);
+    Delimiter := ',';
+    for I := 0 to slFileText.Count-1 do
+      ProcessLine(slFileText[I]);
+  end
+
 end;
 
 end.
