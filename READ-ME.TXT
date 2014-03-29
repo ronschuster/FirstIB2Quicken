@@ -1,11 +1,11 @@
 Download First IB Checking transactions to CSV: 
-  Select Export History on the menu
   Enter the desired date range
+  Click the "Export" link
   Choose CSV for export format 
-  Click Download Data
+  Click the "Export" button
   Save file to My Documents\Financial with a unique filename (e.g. FirstIB_2011.csv)
 Download First IB Bill Payment history to CSV:
-  Select BILL PAYMENT on the menu.
+  Select PAY BILLS on the menu.
   Click View Bill History at the bottom of the Recent Payments pane.
   In Current View select the desired date range.
   Click Download Payments
@@ -20,7 +20,7 @@ Discover card transactions:
   Enter the desired date range
   Click Search
   Click Download
-  Save as CSV
+  Save as CSV to My Documents\Financial with a unique filename (e.g. discover_2011.csv)
 
 DollarBank transactions:
   Select Activity tab
@@ -28,7 +28,7 @@ DollarBank transactions:
   Click Continue
   Select the desired transactions and click Download Selected, or click Download All
   If there's more than one page, download each to a separate file. 
-  If you downloaded more than one file use a spreasheet program to create a single file with the desired range of dates. 
+  If you downloaded more than one file use a spreadsheet program to create a single file with the desired range of dates. 
 
 Run C:\Delphi projects\FirstIB2Quicken\Banks2Quicken.exe
 
