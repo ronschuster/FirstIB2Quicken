@@ -1,9 +1,9 @@
 object Form1: TForm1
   Left = 30
   Top = 178
-  Width = 1000
-  Height = 533
   Caption = 'Form1'
+  ClientHeight = 495
+  ClientWidth = 984
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -20,13 +20,13 @@ object Form1: TForm1
     Left = 641
     Top = 41
     Width = 5
-    Height = 458
-    Cursor = crHSplit
+    Height = 454
+    ExplicitHeight = 458
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 992
+    Width = 984
     Height = 41
     Align = alTop
     TabOrder = 0
@@ -134,7 +134,7 @@ object Form1: TForm1
     Left = 0
     Top = 41
     Width = 641
-    Height = 458
+    Height = 454
     Align = alLeft
     BorderWidth = 8
     Caption = 'pnlChecking'
@@ -144,7 +144,7 @@ object Form1: TForm1
       Left = 9
       Top = 9
       Width = 623
-      Height = 440
+      Height = 436
       Align = alClient
       Columns = <
         item
@@ -199,16 +199,16 @@ object Form1: TForm1
   object Panel3: TPanel
     Left = 646
     Top = 41
-    Width = 346
-    Height = 458
+    Width = 338
+    Height = 454
     Align = alClient
     BorderWidth = 8
     TabOrder = 2
     object lvPayments: TListView
       Left = 9
       Top = 9
-      Width = 328
-      Height = 440
+      Width = 320
+      Height = 436
       Align = alClient
       Columns = <
         item

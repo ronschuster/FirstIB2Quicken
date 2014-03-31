@@ -5,6 +5,9 @@ unit Unit1;
 05/13/11   RJS   Added support for Category.
 05/13/11   RJS   Added Read Discover button
 12/15/12   RJS   Added Read DollarBankfile button
+03/30/14   RJS   For DollarBank, strip leading "ONL ##### ' where ##### is a 5-digit number.
+                 Changed btnReadCheckingClick to search from the first line for Column headings line rather than having a hard-coded line number.
+                 Convert to Delphi XE.
 }
 
 
@@ -107,7 +110,7 @@ implementation
 {$R *.DFM}
 
 uses
-  StStrL;
+  StStrL, RegularExpressions;
 
 var
   ChkSortField, PmtSortField: string;
@@ -202,6 +205,11 @@ begin
       Trans.Memo := Copy(Desc, Length(PhraseSet2[I])+2, 255) + ' ' + Memo;
       Break;
     end;
+
+// for DollarBank, strip leading "ONL ##### ' where ##### is a 5-digit number
+  if TRegEx.IsMatch(Desc, '^ONL \d\d\d\d\d ') then
+    Trans.Description := Copy(Desc, 11, 255);
+
 (*
   NewMemo := '';
   Pos := 1;
@@ -351,8 +359,7 @@ procedure TForm1.btnReadCheckingClick(Sender: TObject);
 var
   I: Integer;
   Filename: string;
-const
-  TitleLines = 5;  //number of lines before the column heading line
+  ColumnHeadingsFound: Boolean;
 begin
   OpenDialog1.Filter := '*.csv|*.csv|*.qif|*.qif';
   if OpenDialog1.Execute then begin
@@ -364,10 +371,16 @@ begin
         Exit;
       slFileText.LoadFromFile(Filename);
       Delimiter := ',';
-      if FilterL(slFileText[TitleLines],' ') <> 'TransactionNumber,Date,Description,Memo,AmountDebit,AmountCredit,Balance,CheckNumber,Fees' then
-        raise Exception.Create('Invalid file input format');
-      for I := TitleLines + 1 to slFileText.Count-1 do
-        ProcessLine(slFileText[I]);
+      ColumnHeadingsFound := False;
+      for I := 0 to slFileText.Count-1 do
+        if not ColumnHeadingsFound then begin
+          if FilterL(slFileText[I],' ') = 'TransactionNumber,Date,Description,Memo,AmountDebit,AmountCredit,Balance,CheckNumber,Fees' then
+            ColumnHeadingsFound := True;
+        end
+        else
+          ProcessLine(slFileText[I]);
+      if not ColumnHeadingsFound then
+        raise Exception.Create('Invalid file input format. Column headings line not found.');
     end
   end;
 end;
@@ -536,7 +549,7 @@ begin
           'P': Description := Copy(S, 2, 80);
           'L': Category := Copy(S, 2, 80);
           'M': Memo := Copy(S, 2, 80);
-          'N': if S[2] in ['0'..'9'] then
+          'N': if CharInSet(S[2], ['0'..'9']) then
                  CheckNumber := StrToIntDef(Copy(S, 2, 10), 0);
         end;
         Inc(J);

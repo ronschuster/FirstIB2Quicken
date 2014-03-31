@@ -42,14 +42,17 @@ Click Date column heading to sort bill payment transactions ascending by date
 Drag each bill payment over to its corresponding checking account transaction
 Click "Read checking file" and select the First IB Checking transactions file
 Drag each check over to its corresponding checking account transaction
-Click Write QIF file. Enter a filename for QIF file. (e.g., FirstIB2Quicken_2011.QIF)
+Assign Category to as many transactions as possible.
+Click Write QIF file. Enter a filename for QIF file. (e.g., FirstIB_2011.QIF)
 
 Click "Read Discover file" and select the Discover card transactions file
-Click Write QIF file. Enter a filename for QIF file. (e.g., Discover2Quicken_2011.QIF)
+Assign Category to as many transactions as possible.
+Click Write QIF file. Enter a filename for QIF file. (e.g., Discover_2011.QIF)
 
 Click "Read DollarBank file" and select the DollarBank transactions file
 Click "Clean'em up"
-Click Write QIF file. Enter a filename for QIF file. (e.g., DollarBank2Quicken_2011.QIF)
+Assign Category to as many transactions as possible.
+Click Write QIF file. Enter a filename for QIF file. (e.g., DollarBank_2011.QIF)
 
 Import QIF files into Quicken, each into its corresponding account.  
   Select File - Import - QIF file
