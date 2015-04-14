@@ -1,7 +1,7 @@
 Download First IB Checking transactions to CSV: 
   Enter the desired date range
   Click the "Export" link
-  Choose CSV for export format 
+  Choose "Excel (.csv)" for export format 
   Click the "Export" button
   Save file to My Documents\Financial with a unique filename (e.g. FirstIB_2011.csv)
 Download First IB Bill Payment history to CSV:
@@ -23,6 +23,7 @@ Discover card transactions:
   Save as CSV to My Documents\Financial with a unique filename (e.g. discover_2011.csv)
 
 DollarBank transactions:
+Forget the following. Use FinanceWorks
   Select Activity tab
   In Download Criteria section, check Activity Download, and select CSV.
   Click Continue
@@ -40,7 +41,7 @@ Click Trans No column heading to sort transaction ascending by date
 Click "Read bill payment file" and select the First IB Bill Payment history file
 Click Date column heading to sort bill payment transactions ascending by date
 Drag each bill payment over to its corresponding checking account transaction
-Click "Read checking file" and select the First IB Checking transactions file
+Click "Read checkbook file" and select the First IB checkbook file
 Drag each check over to its corresponding checking account transaction
 Assign Category to as many transactions as possible.
 Click Write QIF file. Enter a filename for QIF file. (e.g., FirstIB_2011.QIF)

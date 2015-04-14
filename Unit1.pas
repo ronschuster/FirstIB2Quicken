@@ -8,6 +8,7 @@ unit Unit1;
 03/30/14   RJS   For DollarBank, strip leading "ONL ##### ' where ##### is a 5-digit number.
                  Changed btnReadCheckingClick to search from the first line for Column headings line rather than having a hard-coded line number.
                  Convert to Delphi XE.
+04/13/15   RJS   Added Read FinanceWorks File
 }
 
 
@@ -60,6 +61,7 @@ type
     btnApply: TButton;
     btnReadDiscoverFile: TButton;
     btnReadDollarBankFile: TButton;
+    btnReadFinanceorksFile: TButton;
     procedure btnReadCheckingClick(Sender: TObject);
     procedure lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
@@ -87,6 +89,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure btnReadDiscoverFileClick(Sender: TObject);
     procedure btnReadDollarBankFileClick(Sender: TObject);
+    procedure btnReadFinanceorksFileClick(Sender: TObject);
   private
     { Private declarations }
     slFileText: TStringList;
@@ -867,6 +870,56 @@ begin
     end;
     slFileText.SaveToFile(SaveDialog1.Filename)
   end;
+end;
+
+procedure TForm1.btnReadFinanceorksFileClick(Sender: TObject);
+
+  procedure ProcessLine(S: string);
+  var
+    Pos: Integer;
+    ListItem: TListItem;
+    Trans: TChkTrans;
+  begin
+    if Length(S) = 0 then
+      Exit;
+
+    Pos := 1;
+    Trans := TChkTrans.Create;
+    with Trans do begin
+      Date := StrToDate(GetField(S,Pos));
+      GetField(S,Pos);
+      CheckNumber :=  StrToIntDef(GetField(S,Pos),0);
+      Description := GetField(S,Pos);
+      Category := GetField(S,Pos);
+      Memo := GetField(S,Pos);
+      AmountDebit := StrToAmt(GetField(S,Pos));
+      AmountCredit := StrToAmt(GetField(S,Pos));
+
+      with lvChecking do begin
+        ListItem := Items.Add;
+        ListItem.Data := Trans;
+        CopyChkTransToListItem(Trans, ListItem);
+      end;
+    end;
+  end;
+
+var
+  I: Integer;
+  Filename: string;
+begin
+  OpenDialog1.Filter := '*.csv|*.csv';
+  if OpenDialog1.Execute then begin
+    Filename := OpenDialog1.Filename;
+    if not ClearListView(lvChecking) then
+      Exit;
+    slFileText.LoadFromFile(Filename);
+    Delimiter := ',';
+    if TrimLeft(slFileText[1]) <> 'Date, Account Name, Check #, Transaction, Category, Note, Expense, Deposit' then
+      raise Exception.Create('Invalid file input format');
+    for I := 2 to slFileText.Count-1 do
+      ProcessLine(TrimLeft(slFileText[I]));
+  end
+
 end;
 
 procedure TForm1.btnApplyClick(Sender: TObject);
