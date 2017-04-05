@@ -9,6 +9,7 @@ unit Unit1;
                  Changed btnReadCheckingClick to search from the first line for Column headings line rather than having a hard-coded line number.
                  Convert to Delphi XE.
 04/13/15   RJS   Added Read FinanceWorks File
+04/04/17   RJS   Added coloring of items in checking list matching  item selected in payment list.
 }
 
 
@@ -90,6 +91,10 @@ type
     procedure btnReadDiscoverFileClick(Sender: TObject);
     procedure btnReadDollarBankFileClick(Sender: TObject);
     procedure btnReadFinanceorksFileClick(Sender: TObject);
+    procedure lvCheckingCustomDrawItem(Sender: TCustomListView; Item: TListItem;
+      State: TCustomDrawState; var DefaultDraw: Boolean);
+    procedure lvPaymentsChange(Sender: TObject; Item: TListItem;
+      Change: TItemChange);
   private
     { Private declarations }
     slFileText: TStringList;
@@ -101,6 +106,7 @@ type
       CopyTransToListItem: TCopyTransToListItem);
     function ClearListView(LV: TListView): Boolean;
     function GetField(InStr: string; var Pos: Integer): string;
+    function MatchingTransaction(CT, Pmt: TChkTrans): Boolean;
   public
     { Public declarations }
   end;
@@ -496,6 +502,23 @@ begin
     Compare := -1 * Compare;
 end;
 
+procedure TForm1.lvCheckingCustomDrawItem(Sender: TCustomListView;
+  Item: TListItem; State: TCustomDrawState; var DefaultDraw: Boolean);
+const
+  clMatch = $CCFFCC;  // color of matching list items
+var
+  Accept: Boolean;
+begin
+  if lvPayments.Selected = nil then
+    Accept := False
+  else
+    Accept := MatchingTransaction(TChkTrans(Item.Data), TChkTrans(lvPayments.Selected.Data));
+  if Accept then
+    lvChecking.Canvas.Brush.Color := clMatch
+  else
+    lvChecking.Canvas.Brush.Color := clWindow;
+end;
+
 procedure TForm1.btnCleanupClick(Sender: TObject);
 var
   I: Integer;
@@ -688,7 +711,6 @@ begin
   end
 end;
 
-
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   slFileText := TStringList.Create;
@@ -697,6 +719,12 @@ end;
 procedure TForm1.FormDestroy(Sender: TObject);
 begin
   slFileText.Free;
+end;
+
+procedure TForm1.lvPaymentsChange(Sender: TObject; Item: TListItem;
+  Change: TItemChange);
+begin
+  lvChecking.Repaint;
 end;
 
 procedure TForm1.lvPaymentsColumnClick(Sender: TObject;
@@ -762,18 +790,23 @@ begin
   end;
 end;
 
+function TForm1.MatchingTransaction(CT, Pmt: TChkTrans): Boolean;
+{ returns true if the checking transaction CT matches the payment Pmt for the
+  purposes of highlighting valid drag targets. }
+begin
+  Result := (CT.AmountDebit = Pmt.AmountDebit)
+             and (CT.Date >= Pmt.Date);
+end;
+
 procedure TForm1.lvCheckingDragOver(Sender, Source: TObject; X, Y: Integer;
   State: TDragState; var Accept: Boolean);
 var
-  CT: TChkTrans;
   L: TListItem;
 begin
   L := lvChecking.GetItemAt(X,Y);
   if (L = nil) or (DragPmt = nil) then
     Exit;
-  CT := TChkTrans(L.Data);
-  Accept := (CT.AmountDebit = DragPmt.AmountDebit)
-             and (CT.Date >= DragPmt.Date);
+  Accept := MatchingTransaction(TChkTrans(L.Data), DragPmt);
 end;
 
 procedure TForm1.lvPaymentsStartDrag(Sender: TObject;
