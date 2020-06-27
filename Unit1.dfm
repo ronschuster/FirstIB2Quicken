@@ -10,6 +10,7 @@ object Form1: TForm1
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
+  Menu = MainMenu1
   OldCreateOrder = False
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -18,131 +19,77 @@ object Form1: TForm1
   TextHeight = 13
   object Splitter1: TSplitter
     Left = 641
-    Top = 72
+    Top = 36
     Width = 5
-    Height = 423
+    Height = 459
   end
   object Panel1: TPanel
     Left = 0
     Top = 0
     Width = 984
-    Height = 72
+    Height = 36
     Align = alTop
     TabOrder = 0
-    object Label1: TLabel
-      Left = 680
-      Top = 14
-      Width = 42
-      Height = 13
-      Caption = 'Category'
-    end
-    object btnReadChecking: TButton
-      Left = 8
-      Top = 8
-      Width = 99
-      Height = 25
-      Caption = 'Read checking file'
-      TabOrder = 0
-      OnClick = btnReadCheckingClick
-    end
     object btnCleanup: TButton
-      Left = 107
-      Top = 8
+      Left = 9
+      Top = 5
       Width = 67
       Height = 25
       Caption = 'Clean'#39'em up'
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnCleanupClick
     end
-    object btnReadPayment: TButton
-      Left = 273
-      Top = 8
-      Width = 111
-      Height = 25
-      Caption = 'Read bill payment  file'
-      TabOrder = 2
-      OnClick = btnReadPaymentClick
-    end
-    object btnWriteQIF: TButton
-      Left = 600
-      Top = 8
-      Width = 69
-      Height = 25
-      Caption = 'Write QIF file'
-      TabOrder = 3
-      OnClick = btnWriteQIFClick
-    end
-    object btnReadCheckbook: TButton
-      Left = 385
-      Top = 8
-      Width = 110
-      Height = 25
-      Caption = 'Read checkbook file'
-      TabOrder = 4
-      OnClick = btnReadCheckbookClick
-    end
-    object cboCategory: TwwDBComboBox
-      Left = 728
-      Top = 10
-      Width = 209
-      Height = 21
-      ShowButton = True
-      Style = csDropDown
-      MapList = False
-      AllowClearKey = False
-      DropDownCount = 8
-      HistoryList.Section = 'Categories'
-      HistoryList.FileName = 'FirstIB2Quicken.INI'
-      HistoryList.Enabled = True
-      HistoryList.MRUEnabled = True
-      HistoryList.MRUMaxSize = 5
-      ItemHeight = 0
-      Sorted = False
-      TabOrder = 5
-      UnboundDataType = wwDefault
-    end
-    object btnApply: TButton
-      Left = 936
-      Top = 8
-      Width = 41
-      Height = 25
-      Caption = 'Apply'
-      TabOrder = 6
-      OnClick = btnApplyClick
-    end
-    object btnReadDiscoverFile: TButton
-      Left = 175
-      Top = 8
-      Width = 97
-      Height = 25
-      Caption = 'Read Discover file'
-      TabOrder = 7
-      OnClick = btnReadDiscoverFileClick
-    end
-    object btnReadDollarBankFile: TButton
-      Left = 497
-      Top = 8
-      Width = 100
-      Height = 25
-      Caption = 'Read DollarBankfile'
-      TabOrder = 8
-      OnClick = btnReadDollarBankFileClick
-    end
-    object btnReadFinanceorksFile: TButton
-      Left = 501
-      Top = 40
-      Width = 133
-      Height = 25
-      Caption = 'Read FinanceWorks File'
-      TabOrder = 9
-      OnClick = btnReadFinanceorksFileClick
+    object Panel2: TPanel
+      Left = 666
+      Top = 1
+      Width = 317
+      Height = 34
+      Align = alRight
+      BevelOuter = bvNone
+      TabOrder = 1
+      object Label1: TLabel
+        Left = 8
+        Top = 10
+        Width = 42
+        Height = 13
+        Caption = 'Category'
+      end
+      object cboCategory: TwwDBComboBox
+        Left = 56
+        Top = 6
+        Width = 209
+        Height = 21
+        ShowButton = True
+        Style = csDropDown
+        MapList = False
+        AllowClearKey = False
+        DropDownCount = 20
+        HistoryList.Section = 'Categories'
+        HistoryList.FileName = 'FirstIB2Quicken.INI'
+        HistoryList.Enabled = True
+        HistoryList.MRUEnabled = True
+        HistoryList.MRUMaxSize = 10
+        ItemHeight = 0
+        Sorted = False
+        TabOrder = 0
+        UnboundDataType = wwDefault
+      end
+      object btnApply: TButton
+        Left = 269
+        Top = 4
+        Width = 41
+        Height = 25
+        Caption = 'Apply'
+        TabOrder = 1
+        OnClick = btnApplyClick
+      end
     end
   end
   object pnlChecking: TPanel
     Left = 0
-    Top = 72
+    Top = 36
     Width = 641
-    Height = 423
+    Height = 459
     Align = alLeft
     BorderWidth = 8
     Caption = 'pnlChecking'
@@ -152,7 +99,7 @@ object Form1: TForm1
       Left = 9
       Top = 9
       Width = 623
-      Height = 405
+      Height = 441
       Align = alClient
       Columns = <
         item
@@ -207,9 +154,9 @@ object Form1: TForm1
   end
   object Panel3: TPanel
     Left = 646
-    Top = 72
+    Top = 36
     Width = 338
-    Height = 423
+    Height = 459
     Align = alClient
     BorderWidth = 8
     TabOrder = 2
@@ -217,7 +164,7 @@ object Form1: TForm1
       Left = 9
       Top = 9
       Width = 320
-      Height = 405
+      Height = 441
       Align = alClient
       Columns = <
         item
@@ -267,5 +214,51 @@ object Form1: TForm1
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing]
     Left = 152
     Top = 49
+  end
+  object MainMenu1: TMainMenu
+    Left = 112
+    Top = 136
+    object File1: TMenuItem
+      Caption = 'File'
+      object Read1: TMenuItem
+        Caption = 'Read'
+        object mniChecking: TMenuItem
+          Caption = 'Checking'
+          OnClick = btnReadCheckingClick
+        end
+        object mniDiscover: TMenuItem
+          Caption = 'Discover'
+          OnClick = btnReadDiscoverFileClick
+        end
+        object mniBillpayment: TMenuItem
+          Caption = 'Bill payment'
+          OnClick = btnReadPaymentClick
+        end
+        object mniCheckbook: TMenuItem
+          Caption = 'Checkbook'
+          OnClick = btnReadCheckbookClick
+        end
+        object mniDollarBank: TMenuItem
+          Caption = 'DollarBank'
+          OnClick = btnReadDollarBankFileClick
+        end
+        object mniFinanceWorks: TMenuItem
+          Caption = 'FinanceWorks'
+          OnClick = btnReadFinanceorksFileClick
+        end
+        object mniChaseChecking: TMenuItem
+          Caption = 'Chase Checking'
+          OnClick = mniChaseCheckingClick
+        end
+      end
+      object mniWriteQIF: TMenuItem
+        Caption = 'Write QIF'
+        OnClick = btnWriteQIFClick
+      end
+      object mniExit: TMenuItem
+        Caption = 'Exit'
+        OnClick = mniExitClick
+      end
+    end
   end
 end

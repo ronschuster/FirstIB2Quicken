@@ -10,6 +10,7 @@ unit Unit1;
                  Convert to Delphi XE.
 04/13/15   RJS   Added Read FinanceWorks File
 04/04/17   RJS   Added coloring of items in checking list matching  item selected in payment list.
+06/27/20   RJS   Replaced individual function buttons with menu. Added ReadCSVFile to combine common code.
 }
 
 
@@ -17,7 +18,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, ExtCtrls, Mask, wwdbedit, Wwdotdot, Wwdbcomb;
+  StdCtrls, ComCtrls, ExtCtrls, Mask, wwdbedit, Wwdotdot, Wwdbcomb, Menus;
 
 type
   TChkTrans = class
@@ -41,28 +42,35 @@ type
   end;
 
   TCopyTransToListItem = procedure (T:TChkTrans; L:TListItem) of Object;
+  TProcessLineProc = procedure (S: string; Trans: TChkTrans) of object;
 
   TForm1 = class(TForm)
     OpenDialog1: TOpenDialog;
     Panel1: TPanel;
-    btnReadChecking: TButton;
     pnlChecking: TPanel;
     lvChecking: TListView;
     btnCleanup: TButton;
-    btnReadPayment: TButton;
     Splitter1: TSplitter;
     Panel3: TPanel;
     lvPayments: TListView;
     Timer1: TTimer;
-    btnWriteQIF: TButton;
     SaveDialog1: TSaveDialog;
-    btnReadCheckbook: TButton;
-    cboCategory: TwwDBComboBox;
+    MainMenu1: TMainMenu;
+    File1: TMenuItem;
+    Read1: TMenuItem;
+    mniWriteQIF: TMenuItem;
+    mniExit: TMenuItem;
+    mniChecking: TMenuItem;
+    mniDiscover: TMenuItem;
+    mniBillpayment: TMenuItem;
+    mniCheckbook: TMenuItem;
+    mniDollarBank: TMenuItem;
+    mniFinanceWorks: TMenuItem;
+    mniChaseChecking: TMenuItem;
+    Panel2: TPanel;
     Label1: TLabel;
+    cboCategory: TwwDBComboBox;
     btnApply: TButton;
-    btnReadDiscoverFile: TButton;
-    btnReadDollarBankFile: TButton;
-    btnReadFinanceorksFile: TButton;
     procedure btnReadCheckingClick(Sender: TObject);
     procedure lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
@@ -95,10 +103,13 @@ type
       State: TCustomDrawState; var DefaultDraw: Boolean);
     procedure lvPaymentsChange(Sender: TObject; Item: TListItem;
       Change: TItemChange);
+    procedure mniExitClick(Sender: TObject);
+    procedure mniChaseCheckingClick(Sender: TObject);
   private
     { Private declarations }
     slFileText: TStringList;
     Delimiter: Char;
+    LoadingFile: Boolean;  // while loading file in the right-hand pane, suppress custom draw on left-hand pane
     procedure CleanUpItem (Item: TListItem);
     procedure CopyChkTransToListItem(T:TChkTrans; L:TListItem);
     procedure CopyPmtTransToListItem(T:TChkTrans; L:TListItem);
@@ -107,6 +118,10 @@ type
     function ClearListView(LV: TListView): Boolean;
     function GetField(InStr: string; var Pos: Integer): string;
     function MatchingTransaction(CT, Pmt: TChkTrans): Boolean;
+    procedure ReadCSVFile(HeaderLine: string; AProcessLine: TProcessLineProc);
+    procedure ProcessChaseCheckingLine(S: string; Trans: TChkTrans);
+    procedure ProcessFinanceorksFileLine(S: string; Trans: TChkTrans);
+    procedure ProcessDiscoverFileLine(S: string; Trans: TChkTrans);
   public
     { Public declarations }
   end;
@@ -126,6 +141,7 @@ var
   ChkSortAsc, PmtSortAsc: Boolean;
   DragPmt: TChkTrans;
   DragIndex: Integer;
+
 
 procedure TForm1.CleanUpItem (Item: TListItem);
 {for any of the specific Desc, the Memo is cleaned up
@@ -394,54 +410,27 @@ begin
   end;
 end;
 
-procedure TForm1.btnReadDiscoverFileClick(Sender: TObject);
-
-  procedure ProcessLine(S: string);
-  var
-    Pos: Integer;
-    ListItem: TListItem;
-    Trans: TChkTrans;
-  begin
-    if Length(S) = 0 then
-      Exit;
-
-    Pos := 1;
-    Trans := TChkTrans.Create;
-    with Trans do begin
-      Date := StrToDate(GetField(S,Pos));
-      GetField(S,Pos); //Post Date
-      Description := GetField(S,Pos);
-      AmountDebit := -1 * StrToAmt(GetField(S,Pos));
-      if AmountDebit > 0 then begin
-        AmountCredit := AmountDebit;
-        AmountDebit := 0;
-      end;
-      Category := GetField(S,Pos);
-
-      with lvChecking do begin
-        ListItem := Items.Add;
-        ListItem.Data := Trans;
-        CopyChkTransToListItem(Trans, ListItem);
-      end;
-    end;
-  end;
-
+procedure TForm1.ProcessDiscoverFileLine(S: string; Trans: TChkTrans);
 var
-  I: Integer;
-  Filename: string;
+  Pos: Integer;
 begin
-  OpenDialog1.Filter := '*.csv|*.csv';
-  if OpenDialog1.Execute then begin
-    Filename := OpenDialog1.Filename;
-    if not ClearListView(lvChecking) then
-      Exit;
-    slFileText.LoadFromFile(Filename);
-    Delimiter := ',';
-    if slFileText[0] <> 'Trans. Date,Post Date,Description,Amount,Category' then
-      raise Exception.Create('Invalid file input format');
-    for I := 1 to slFileText.Count-1 do
-      ProcessLine(slFileText[I]);
-  end
+  Pos := 1;
+  with Trans do begin
+    Date := StrToDate(GetField(S,Pos));
+    GetField(S,Pos); //Post Date
+    Description := GetField(S,Pos);
+    AmountDebit := -1 * StrToAmt(GetField(S,Pos));
+    if AmountDebit > 0 then begin
+      AmountCredit := AmountDebit;
+      AmountDebit := 0;
+    end;
+    Category := GetField(S,Pos);
+  end;
+end;
+
+procedure TForm1.btnReadDiscoverFileClick(Sender: TObject);
+begin
+  ReadCSVFile('Trans. Date,Post Date,Description,Amount,Category', ProcessDiscoverFileLine);
 end;
 
 procedure TForm1.lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
@@ -619,13 +608,14 @@ begin
 end;
 
 procedure TForm1.btnReadPaymentClick(Sender: TObject);
-// "12/31/2010","55.00",,"Uncategorized","PMT","FIVE STAR GYMNASTICS"
+// 12/31/2015,"Grace C & MA Church",$562.00,JX1F0-1RGX0,DDA - 2206,Complete,Charitable Donations
 
   procedure ProcessLine(S: string);
   var
     Pos: Integer;
     ListItem: TListItem;
     Trans: TChkTrans;
+    Status: string;
   begin
     if Length(S) = 0 then
       Exit;
@@ -633,17 +623,20 @@ procedure TForm1.btnReadPaymentClick(Sender: TObject);
     Trans := TChkTrans.Create;
     with Trans do begin
       Date := StrToDate(GetField(S,Pos));
+      Description := GetField(S,Pos);
       AmountDebit := -StrToAmt(FilterL(GetField(S,Pos),'$'));
       GetField(S,Pos);
-      Memo := GetField(S,Pos);
       GetField(S,Pos);
-      Description := GetField(S,Pos);
-
-      with lvPayments do begin
-        ListItem := Items.Add;
-        ListItem.Data := Trans;
-        CopyPmtTransToListItem(Trans, ListItem);
-      end;
+      Status := GetField(S,Pos);
+      Category := GetField(S,Pos);
+      if Status = 'Complete' then
+        with lvPayments do begin
+          ListItem := Items.Add;
+          ListItem.Data := Trans;
+          CopyPmtTransToListItem(Trans, ListItem);
+        end
+      else
+        Trans.Free;
     end;
   end;
 
@@ -658,8 +651,15 @@ begin
       Exit;
     slFileText.LoadFromFile(Filename);
     Delimiter := ',';
-    for I := 1 to slFileText.Count-1 do
-      ProcessLine(slFileText[I]);
+    if slFileText[0] <> 'Deliver by,Paid to,Amount,Confirmation No.,Paid from,Status,Category' then
+      raise Exception.Create('Invalid file input format');
+    try
+      LoadingFile := True;
+      for I := 1 to slFileText.Count-1 do
+        ProcessLine(slFileText[I]);
+    finally
+      LoadingFile := False;
+    end;
   end
 end;
 
@@ -705,8 +705,13 @@ begin
       Delimiter := #9;
       if slFileText[0] <> 'Chk#'#9'Date'#9'Payee'#9'Memo'#9'Amt' then
         raise Exception.Create('Invalid file input format');
-      for I := 1 to slFileText.Count-1 do
-        ProcessLine(slFileText[I]);
+      try
+        LoadingFile := True;
+        for I := 1 to slFileText.Count-1 do
+          ProcessLine(slFileText[I]);
+      finally
+        LoadingFile := False;
+      end;
     end
   end
 end;
@@ -724,7 +729,8 @@ end;
 procedure TForm1.lvPaymentsChange(Sender: TObject; Item: TListItem;
   Change: TItemChange);
 begin
-  lvChecking.Repaint;
+  if not LoadingFile then
+    lvChecking.Repaint;
 end;
 
 procedure TForm1.lvPaymentsColumnClick(Sender: TObject;
@@ -796,6 +802,76 @@ function TForm1.MatchingTransaction(CT, Pmt: TChkTrans): Boolean;
 begin
   Result := (CT.AmountDebit = Pmt.AmountDebit)
              and (CT.Date >= Pmt.Date);
+end;
+
+procedure TForm1.ReadCSVFile(HeaderLine: string; AProcessLine: TProcessLineProc);
+
+  procedure ProcessLine(S: string);
+  var
+    ListItem: TListItem;
+    Trans: TChkTrans;
+  begin
+    if Length(S) = 0 then
+      Exit;
+    Trans := TChkTrans.Create;
+    with Trans do begin
+      AProcessLine(S, Trans);
+      with lvChecking do begin
+        ListItem := Items.Add;
+        ListItem.Data := Trans;
+        CopyChkTransToListItem(Trans, ListItem);
+      end;
+    end;
+  end;
+
+var
+  I: Integer;
+  Filename: string;
+begin
+  OpenDialog1.Filter := '*.csv|*.csv';
+  if OpenDialog1.Execute then begin
+    Filename := OpenDialog1.Filename;
+    if not ClearListView(lvChecking) then
+      Exit;
+    slFileText.LoadFromFile(Filename);
+    Delimiter := ',';
+    while Trim(slFileText[0]) = '' do
+      slFileText.Delete(0);
+    if Trim(slFileText[0]) <> HeaderLine then
+      raise Exception.Create('Invalid file input format. Expected: ' + HeaderLine + 'Received: ' + Trim(slFileText[0]));
+    for I := 1 to slFileText.Count-1 do
+      ProcessLine(Trim(slFileText[I]));
+  end
+end;
+
+procedure TForm1.ProcessChaseCheckingLine(S: string; Trans: TChkTrans);
+{
+DEBIT,12/09/2016,"HI ROCKY SPORTS INC BUENA VISTA CO           12/08",-73.35,DEBIT_CARD,1741.09,,
+}
+var
+  Pos: Integer;
+begin
+  Pos := 1;
+  with Trans do begin
+    GetField(S,Pos); //Details
+    Date := StrToDate(GetField(S,Pos));
+    Description := GetField(S,Pos);
+    AmountDebit := StrToAmt(GetField(S,Pos));
+    if AmountDebit > 0 then begin
+      AmountCredit := AmountDebit;
+      AmountDebit := 0;
+    end;
+  end;
+end;
+
+procedure TForm1.mniChaseCheckingClick(Sender: TObject);
+begin
+  ReadCSVFile('Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #', ProcessChaseCheckingLine);
+end;
+
+procedure TForm1.mniExitClick(Sender: TObject);
+begin
+  Close
 end;
 
 procedure TForm1.lvCheckingDragOver(Sender, Source: TObject; X, Y: Integer;
@@ -905,54 +981,26 @@ begin
   end;
 end;
 
-procedure TForm1.btnReadFinanceorksFileClick(Sender: TObject);
-
-  procedure ProcessLine(S: string);
-  var
-    Pos: Integer;
-    ListItem: TListItem;
-    Trans: TChkTrans;
-  begin
-    if Length(S) = 0 then
-      Exit;
-
-    Pos := 1;
-    Trans := TChkTrans.Create;
-    with Trans do begin
-      Date := StrToDate(GetField(S,Pos));
-      GetField(S,Pos);
-      CheckNumber :=  StrToIntDef(GetField(S,Pos),0);
-      Description := GetField(S,Pos);
-      Category := GetField(S,Pos);
-      Memo := GetField(S,Pos);
-      AmountDebit := StrToAmt(GetField(S,Pos));
-      AmountCredit := StrToAmt(GetField(S,Pos));
-
-      with lvChecking do begin
-        ListItem := Items.Add;
-        ListItem.Data := Trans;
-        CopyChkTransToListItem(Trans, ListItem);
-      end;
-    end;
-  end;
-
+procedure TForm1.ProcessFinanceorksFileLine(S: string; Trans: TChkTrans);
 var
-  I: Integer;
-  Filename: string;
+  Pos: Integer;
 begin
-  OpenDialog1.Filter := '*.csv|*.csv';
-  if OpenDialog1.Execute then begin
-    Filename := OpenDialog1.Filename;
-    if not ClearListView(lvChecking) then
-      Exit;
-    slFileText.LoadFromFile(Filename);
-    Delimiter := ',';
-    if TrimLeft(slFileText[1]) <> 'Date, Account Name, Check #, Transaction, Category, Note, Expense, Deposit' then
-      raise Exception.Create('Invalid file input format');
-    for I := 2 to slFileText.Count-1 do
-      ProcessLine(TrimLeft(slFileText[I]));
-  end
+  Pos := 1;
+  with Trans do begin
+    Date := StrToDate(GetField(S,Pos));
+    GetField(S,Pos);
+    CheckNumber :=  StrToIntDef(GetField(S,Pos),0);
+    Description := GetField(S,Pos);
+    Category := GetField(S,Pos);
+    Memo := GetField(S,Pos);
+    AmountDebit := StrToAmt(GetField(S,Pos));
+    AmountCredit := StrToAmt(GetField(S,Pos));
+  end;
+end;
 
+procedure TForm1.btnReadFinanceorksFileClick(Sender: TObject);
+begin
+  ReadCSVFile('Date, Account Name, Check #, Transaction, Category, Note, Expense, Deposit', ProcessFinanceorksFileLine);
 end;
 
 procedure TForm1.btnApplyClick(Sender: TObject);
