@@ -250,6 +250,14 @@ object Form1: TForm1
           Caption = 'Chase Checking'
           OnClick = mniChaseCheckingClick
         end
+        object mniChaseVisa: TMenuItem
+          Caption = 'Chase Visa'
+          OnClick = mniChaseVisaClick
+        end
+        object mniCitiVisa: TMenuItem
+          Caption = 'citi Visa'
+          OnClick = mniCitiVisaClick
+        end
       end
       object mniWriteQIF: TMenuItem
         Caption = 'Write QIF'

@@ -11,6 +11,7 @@ unit Unit1;
 04/13/15   RJS   Added Read FinanceWorks File
 04/04/17   RJS   Added coloring of items in checking list matching  item selected in payment list.
 06/27/20   RJS   Replaced individual function buttons with menu. Added ReadCSVFile to combine common code.
+06/27/20   RJS   Changed ReadCSVFile calls to use anonymous methods. Added Chase Visa and citi Visa formats.
 }
 
 
@@ -42,7 +43,7 @@ type
   end;
 
   TCopyTransToListItem = procedure (T:TChkTrans; L:TListItem) of Object;
-  TProcessLineProc = procedure (S: string; Trans: TChkTrans) of object;
+  TProcessLineProc = reference to procedure (S: string; Trans: TChkTrans);
 
   TForm1 = class(TForm)
     OpenDialog1: TOpenDialog;
@@ -71,6 +72,8 @@ type
     Label1: TLabel;
     cboCategory: TwwDBComboBox;
     btnApply: TButton;
+    mniChaseVisa: TMenuItem;
+    mniCitiVisa: TMenuItem;
     procedure btnReadCheckingClick(Sender: TObject);
     procedure lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
@@ -105,6 +108,8 @@ type
       Change: TItemChange);
     procedure mniExitClick(Sender: TObject);
     procedure mniChaseCheckingClick(Sender: TObject);
+    procedure mniChaseVisaClick(Sender: TObject);
+    procedure mniCitiVisaClick(Sender: TObject);
   private
     { Private declarations }
     slFileText: TStringList;
@@ -119,9 +124,6 @@ type
     function GetField(InStr: string; var Pos: Integer): string;
     function MatchingTransaction(CT, Pmt: TChkTrans): Boolean;
     procedure ReadCSVFile(HeaderLine: string; AProcessLine: TProcessLineProc);
-    procedure ProcessChaseCheckingLine(S: string; Trans: TChkTrans);
-    procedure ProcessFinanceorksFileLine(S: string; Trans: TChkTrans);
-    procedure ProcessDiscoverFileLine(S: string; Trans: TChkTrans);
   public
     { Public declarations }
   end;
@@ -410,27 +412,29 @@ begin
   end;
 end;
 
-procedure TForm1.ProcessDiscoverFileLine(S: string; Trans: TChkTrans);
-var
-  Pos: Integer;
-begin
-  Pos := 1;
-  with Trans do begin
-    Date := StrToDate(GetField(S,Pos));
-    GetField(S,Pos); //Post Date
-    Description := GetField(S,Pos);
-    AmountDebit := -1 * StrToAmt(GetField(S,Pos));
-    if AmountDebit > 0 then begin
-      AmountCredit := AmountDebit;
-      AmountDebit := 0;
-    end;
-    Category := GetField(S,Pos);
-  end;
-end;
+
 
 procedure TForm1.btnReadDiscoverFileClick(Sender: TObject);
 begin
-  ReadCSVFile('Trans. Date,Post Date,Description,Amount,Category', ProcessDiscoverFileLine);
+  ReadCSVFile('Trans. Date,Post Date,Description,Amount,Category',
+    procedure (S: string; Trans: TChkTrans)
+    var
+      Pos: Integer;
+    begin
+      Pos := 1;
+      with Trans do begin
+        Date := StrToDate(GetField(S,Pos));
+        GetField(S,Pos); //Post Date
+        Description := GetField(S,Pos);
+        AmountDebit := -1 * StrToAmt(GetField(S,Pos));
+        if AmountDebit > 0 then begin
+          AmountCredit := AmountDebit;
+          AmountDebit := 0;
+        end;
+        Category := GetField(S,Pos);
+      end;
+    end
+  );
 end;
 
 procedure TForm1.lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
@@ -844,29 +848,29 @@ begin
   end
 end;
 
-procedure TForm1.ProcessChaseCheckingLine(S: string; Trans: TChkTrans);
-{
-DEBIT,12/09/2016,"HI ROCKY SPORTS INC BUENA VISTA CO           12/08",-73.35,DEBIT_CARD,1741.09,,
-}
-var
-  Pos: Integer;
-begin
-  Pos := 1;
-  with Trans do begin
-    GetField(S,Pos); //Details
-    Date := StrToDate(GetField(S,Pos));
-    Description := GetField(S,Pos);
-    AmountDebit := StrToAmt(GetField(S,Pos));
-    if AmountDebit > 0 then begin
-      AmountCredit := AmountDebit;
-      AmountDebit := 0;
-    end;
-  end;
-end;
-
 procedure TForm1.mniChaseCheckingClick(Sender: TObject);
 begin
-  ReadCSVFile('Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #', ProcessChaseCheckingLine);
+  ReadCSVFile('Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #',
+    procedure (S: string; Trans: TChkTrans)
+    {
+    DEBIT,12/09/2016,"HI ROCKY SPORTS INC BUENA VISTA CO           12/08",-73.35,DEBIT_CARD,1741.09,,
+    }
+    var
+      Pos: Integer;
+    begin
+      Pos := 1;
+      with Trans do begin
+        GetField(S,Pos); //Details
+        Date := StrToDate(GetField(S,Pos));
+        Description := GetField(S,Pos);
+        AmountDebit := StrToAmt(GetField(S,Pos));
+        if AmountDebit > 0 then begin
+          AmountCredit := AmountDebit;
+          AmountDebit := 0;
+        end;
+      end;
+    end
+  );
 end;
 
 procedure TForm1.mniExitClick(Sender: TObject);
@@ -981,26 +985,26 @@ begin
   end;
 end;
 
-procedure TForm1.ProcessFinanceorksFileLine(S: string; Trans: TChkTrans);
-var
-  Pos: Integer;
-begin
-  Pos := 1;
-  with Trans do begin
-    Date := StrToDate(GetField(S,Pos));
-    GetField(S,Pos);
-    CheckNumber :=  StrToIntDef(GetField(S,Pos),0);
-    Description := GetField(S,Pos);
-    Category := GetField(S,Pos);
-    Memo := GetField(S,Pos);
-    AmountDebit := StrToAmt(GetField(S,Pos));
-    AmountCredit := StrToAmt(GetField(S,Pos));
-  end;
-end;
-
 procedure TForm1.btnReadFinanceorksFileClick(Sender: TObject);
 begin
-  ReadCSVFile('Date, Account Name, Check #, Transaction, Category, Note, Expense, Deposit', ProcessFinanceorksFileLine);
+  ReadCSVFile('Date, Account Name, Check #, Transaction, Category, Note, Expense, Deposit',
+    procedure (S: string; Trans: TChkTrans)
+    var
+      Pos: Integer;
+    begin
+      Pos := 1;
+      with Trans do begin
+        Date := StrToDate(GetField(S,Pos));
+        GetField(S,Pos);
+        CheckNumber :=  StrToIntDef(GetField(S,Pos),0);
+        Description := GetField(S,Pos);
+        Category := GetField(S,Pos);
+        Memo := GetField(S,Pos);
+        AmountDebit := StrToAmt(GetField(S,Pos));
+        AmountCredit := StrToAmt(GetField(S,Pos));
+      end;
+    end
+  );
 end;
 
 procedure TForm1.btnApplyClick(Sender: TObject);
@@ -1076,7 +1080,57 @@ begin
     for I := 0 to slFileText.Count-1 do
       ProcessLine(slFileText[I]);
   end
+end;
 
+procedure TForm1.mniChaseVisaClick(Sender: TObject);
+begin
+  ReadCSVFile('Transaction Date,Post Date,Description,Category,Type,Amount',
+    procedure (S: string; Trans: TChkTrans)
+    {
+    05/18/2020,05/18/2020,AUTOMATIC PAYMENT - THANK,,Payment,119.77
+    05/15/2020,05/15/2020,AMZN Mktp US*MC3CM8DJ2,Shopping,Sale,-9.13
+    }
+    var
+      Pos: Integer;
+    begin
+      Pos := 1;
+      with Trans do begin
+        Date := StrToDate(GetField(S,Pos));
+        GetField(S,Pos); //Post Date
+        Description := GetField(S,Pos);
+        Category := GetField(S,Pos);
+        GetField(S,Pos); //Type
+        AmountDebit := StrToAmt(GetField(S,Pos));
+        if AmountDebit > 0 then begin
+          AmountCredit := AmountDebit;
+          AmountDebit := 0;
+        end;
+      end;
+    end
+  );
+end;
+
+procedure TForm1.mniCitiVisaClick(Sender: TObject);
+begin
+  ReadCSVFile('Status,Date,Description,Debit,Credit,Member Name',
+    procedure (S: string; Trans: TChkTrans)
+    {
+    Cleared,09/13/2019,"AUTOPAY 000000000084386RAUTOPAY AUTO-PMT",,-3527.99,RONALD J SCHUSTER
+    Cleared,09/13/2019,"OLIVE GARDEN 00010736 MIDDLEBRG HTSOH",41.00,,ELISABETH R SCHUSTER
+    }
+    var
+      Pos: Integer;
+    begin
+      Pos := 1;
+      with Trans do begin
+        GetField(S,Pos); //Status
+        Date := StrToDate(GetField(S,Pos));
+        Description := GetField(S,Pos);
+        AmountDebit := -StrToAmt(GetField(S,Pos));
+        AmountCredit := -StrToAmt(GetField(S,Pos));
+      end;
+    end
+  );
 end;
 
 end.
