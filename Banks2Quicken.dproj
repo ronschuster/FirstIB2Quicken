@@ -44,7 +44,7 @@
 			<DCC_DebugInformation>false</DCC_DebugInformation>
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Cfg_2)'!=''">
-			<DCC_Define>DEBUG;EUREKALOG_VER6;$(DCC_Define)</DCC_Define>
+			<DCC_Define>DEBUG;_VER6;$(DCC_Define)</DCC_Define>
 			<DCC_Optimize>false</DCC_Optimize>
 			<DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
 		</PropertyGroup>
@@ -119,7 +119,7 @@
 <!-- EurekaLog First Line
 [Exception Log]
 EurekaLog Version=6102
-Activate=1
+Activate=0
 Activate Handle=1
 Save Log File=1
 Foreground Tab=0
@@ -490,6 +490,8 @@ Count mtMSDialog_SendButtonCaption=1
 mtMSDialog_SendButtonCaption0="%U0026Send Error Report"
 Count mtMSDialog_NoSendButtonCaption=1
 mtMSDialog_NoSendButtonCaption0="%U0026Don't Send"
+Count mtLog_FileVersionNumber=1
+mtLog_FileVersionNumber0="File Version"
 Count mtLog_AppCompilationDate=1
 mtLog_AppCompilationDate0="Compilation Date"
 Count mtLog_AppUpTime=1
@@ -646,5 +648,5 @@ Count mtException_AntiFreeze=1
 mtException_AntiFreeze0="The application seems to be frozen."
 Count mtInvalidEmailMsg=1
 mtInvalidEmailMsg0="Invalid email."
-TextsCollection=English
+TextsCollection=
 EurekaLog Last Line -->

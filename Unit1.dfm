@@ -30,6 +30,13 @@ object Form1: TForm1
     Height = 36
     Align = alTop
     TabOrder = 0
+    object lblFilename: TLabel
+      Left = 88
+      Top = 11
+      Width = 3
+      Height = 13
+      Caption = ' '
+    end
     object btnCleanup: TButton
       Left = 9
       Top = 5
@@ -237,10 +244,6 @@ object Form1: TForm1
         object mniCheckbook: TMenuItem
           Caption = 'Checkbook'
           OnClick = btnReadCheckbookClick
-        end
-        object mniDollarBank: TMenuItem
-          Caption = 'DollarBank'
-          OnClick = btnReadDollarBankFileClick
         end
         object mniFinanceWorks: TMenuItem
           Caption = 'FinanceWorks'
