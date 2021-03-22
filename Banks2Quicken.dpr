@@ -1,7 +1,7 @@
 program Banks2Quicken;
 
 uses
-  ExceptionLog,
+
   Forms,
   Unit1 in 'Unit1.pas' {Form1};
 

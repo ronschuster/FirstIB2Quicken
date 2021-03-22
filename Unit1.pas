@@ -65,7 +65,6 @@ type
     mniDiscover: TMenuItem;
     mniBillpayment: TMenuItem;
     mniCheckbook: TMenuItem;
-    mniDollarBank: TMenuItem;
     mniFinanceWorks: TMenuItem;
     mniChaseChecking: TMenuItem;
     Panel2: TPanel;
@@ -74,6 +73,7 @@ type
     btnApply: TButton;
     mniChaseVisa: TMenuItem;
     mniCitiVisa: TMenuItem;
+    lblFilename: TLabel;
     procedure btnReadCheckingClick(Sender: TObject);
     procedure lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
@@ -100,7 +100,6 @@ type
     procedure btnApplyClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnReadDiscoverFileClick(Sender: TObject);
-    procedure btnReadDollarBankFileClick(Sender: TObject);
     procedure btnReadFinanceorksFileClick(Sender: TObject);
     procedure lvCheckingCustomDrawItem(Sender: TCustomListView; Item: TListItem;
       State: TCustomDrawState; var DefaultDraw: Boolean);
@@ -391,6 +390,7 @@ begin
   OpenDialog1.Filter := '*.csv|*.csv|*.qif|*.qif';
   if OpenDialog1.Execute then begin
     Filename := OpenDialog1.Filename;
+    lblFilename.Caption := Filename;
     if SameText(ExtractFileEXt(Filename), '.qif') then
       ReadQIFFile(Filename, lvChecking, CopyChkTransToListItem)
     else begin
@@ -541,6 +541,7 @@ var
 begin
   if not ClearListView(ListView) then
     Exit;
+  lblFilename.Caption := Filename;
   slFileText.LoadFromFile(Filename);
   if slFileText[0] <> '!Type:Bank' then
     raise Exception.Create('Invalid file input format');
@@ -653,6 +654,7 @@ begin
     Filename := OpenDialog1.Filename;
     if not ClearListView(lvPayments) then
       Exit;
+    lblFilename.Caption := Filename;
     slFileText.LoadFromFile(Filename);
     Delimiter := ',';
     if slFileText[0] <> 'Deliver by,Paid to,Amount,Confirmation No.,Paid from,Status,Category' then
@@ -705,6 +707,7 @@ begin
     else begin
       if not ClearListView(lvPayments) then
         Exit;
+      lblFilename.Caption := Filename;
       slFileText.LoadFromFile(Filename);
       Delimiter := #9;
       if slFileText[0] <> 'Chk#'#9'Date'#9'Payee'#9'Memo'#9'Amt' then
@@ -837,12 +840,13 @@ begin
     Filename := OpenDialog1.Filename;
     if not ClearListView(lvChecking) then
       Exit;
+    lblFilename.Caption := Filename;
     slFileText.LoadFromFile(Filename);
     Delimiter := ',';
     while Trim(slFileText[0]) = '' do
       slFileText.Delete(0);
     if Trim(slFileText[0]) <> HeaderLine then
-      raise Exception.Create('Invalid file input format. Expected: ' + HeaderLine + 'Received: ' + Trim(slFileText[0]));
+      raise Exception.Create('Invalid file input format.'#13'Expected: ' + HeaderLine + #13'Received: ' + Trim(slFileText[0]));
     for I := 1 to slFileText.Count-1 do
       ProcessLine(Trim(slFileText[I]));
   end
@@ -1036,59 +1040,13 @@ begin
   cboCategory.Items.LoadFromFile('categories.txt');
 end;
 
-procedure TForm1.btnReadDollarBankFileClick(Sender: TObject);
-
-  procedure ProcessLine(S: string);
-  var
-    Pos: Integer;
-    ListItem: TListItem;
-    Trans: TChkTrans;
-  begin
-    if Length(S) = 0 then
-      Exit;
-
-    Pos := 1;
-    Trans := TChkTrans.Create;
-    with Trans do begin
-      Date := StrToDate(GetField(S,Pos));
-      Description := GetField(S,Pos);
-      AmountDebit := StrToAmt(GetField(S,Pos));
-      if AmountDebit > 0 then begin
-        AmountCredit := AmountDebit;
-        AmountDebit := 0;
-      end;
-
-      with lvChecking do begin
-        ListItem := Items.Add;
-        ListItem.Data := Trans;
-        CopyChkTransToListItem(Trans, ListItem);
-      end;
-    end;
-  end;
-
-var
-  I: Integer;
-  Filename: string;
-begin
-  OpenDialog1.Filter := '*.csv|*.csv';
-  if OpenDialog1.Execute then begin
-    Filename := OpenDialog1.Filename;
-    if not ClearListView(lvChecking) then
-      Exit;
-    slFileText.LoadFromFile(Filename);
-    Delimiter := ',';
-    for I := 0 to slFileText.Count-1 do
-      ProcessLine(slFileText[I]);
-  end
-end;
-
 procedure TForm1.mniChaseVisaClick(Sender: TObject);
 begin
-  ReadCSVFile('Transaction Date,Post Date,Description,Category,Type,Amount',
+  ReadCSVFile('Transaction Date,Post Date,Description,Category,Type,Amount,Memo',
     procedure (S: string; Trans: TChkTrans)
     {
-    05/18/2020,05/18/2020,AUTOMATIC PAYMENT - THANK,,Payment,119.77
-    05/15/2020,05/15/2020,AMZN Mktp US*MC3CM8DJ2,Shopping,Sale,-9.13
+    05/18/2020,05/18/2020,AUTOMATIC PAYMENT - THANK,,Payment,119.77,
+    05/15/2020,05/15/2020,AMZN Mktp US*MC3CM8DJ2,Shopping,Sale,-9.13,
     }
     var
       Pos: Integer;
@@ -1105,6 +1063,7 @@ begin
           AmountCredit := AmountDebit;
           AmountDebit := 0;
         end;
+        Memo := GetField(S,Pos);
       end;
     end
   );
