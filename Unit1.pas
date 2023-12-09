@@ -16,6 +16,8 @@ unit Unit1;
                  added label for filename
                  updated file format for ChaseVisa
                  turned off EurekaLog. it prevented see exceptions I wanted to see.
+04/09/22   RJS   Removed Chase Checking
+                 Added support for Mint
 }
 
 
@@ -70,7 +72,6 @@ type
     mniBillpayment: TMenuItem;
     mniCheckbook: TMenuItem;
     mniFinanceWorks: TMenuItem;
-    mniChaseChecking: TMenuItem;
     Panel2: TPanel;
     Label1: TLabel;
     cboCategory: TwwDBComboBox;
@@ -78,6 +79,8 @@ type
     mniChaseVisa: TMenuItem;
     mniCitiVisa: TMenuItem;
     lblFilename: TLabel;
+    mniMint: TMenuItem;
+    mniConvertMintcategoriestoQuicken: TMenuItem;
     procedure btnReadCheckingClick(Sender: TObject);
     procedure lvCheckingCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
@@ -113,6 +116,8 @@ type
     procedure mniChaseCheckingClick(Sender: TObject);
     procedure mniChaseVisaClick(Sender: TObject);
     procedure mniCitiVisaClick(Sender: TObject);
+    procedure mniMintClick(Sender: TObject);
+    procedure mniConvertMintcategoriestoQuickenClick(Sender: TObject);
   private
     { Private declarations }
     slFileText: TStringList;
@@ -139,7 +144,7 @@ implementation
 {$R *.DFM}
 
 uses
-  StStrL, RegularExpressions;
+  StStrL, RegularExpressions, Generics.Collections, System.UITypes;
 
 var
   ChkSortField, PmtSortField: string;
@@ -415,8 +420,6 @@ begin
     end
   end;
 end;
-
-
 
 procedure TForm1.btnReadDiscoverFileClick(Sender: TObject);
 begin
@@ -856,31 +859,6 @@ begin
   end
 end;
 
-procedure TForm1.mniChaseCheckingClick(Sender: TObject);
-begin
-  ReadCSVFile('Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #',
-    procedure (S: string; Trans: TChkTrans)
-    {
-    DEBIT,12/09/2016,"HI ROCKY SPORTS INC BUENA VISTA CO           12/08",-73.35,DEBIT_CARD,1741.09,,
-    }
-    var
-      Pos: Integer;
-    begin
-      Pos := 1;
-      with Trans do begin
-        GetField(S,Pos); //Details
-        Date := StrToDate(GetField(S,Pos));
-        Description := GetField(S,Pos);
-        AmountDebit := StrToAmt(GetField(S,Pos));
-        if AmountDebit > 0 then begin
-          AmountCredit := AmountDebit;
-          AmountDebit := 0;
-        end;
-      end;
-    end
-  );
-end;
-
 procedure TForm1.mniExitClick(Sender: TObject);
 begin
   Close
@@ -1091,6 +1069,95 @@ begin
         Description := GetField(S,Pos);
         AmountDebit := -StrToAmt(GetField(S,Pos));
         AmountCredit := -StrToAmt(GetField(S,Pos));
+      end;
+    end
+  );
+end;
+
+procedure TForm1.mniConvertMintcategoriestoQuickenClick(Sender: TObject);
+var
+  I, Pos: Integer;
+  MintToQuickenCatgs: TDictionary<string,string>;
+  S, MintCatg, QuickenCatg: string;
+  CT: TChkTrans;
+  L: TListItem;
+begin
+  MintToQuickenCatgs := TDictionary<string,string>.Create;
+  try
+    slFileText.LoadFromFile('MintToQuickenCategories.csv');
+    Delimiter := ',';
+    for I := 1 to slFileText.Count-1 do begin
+      Pos := 1;
+      S := Trim(slFileText[I]);
+      MintCatg := GetField(S,Pos);
+      QuickenCatg := GetField(S,Pos);
+      MintToQuickenCatgs.Add(Uppercase(MintCatg), QuickenCatg);
+    end;
+    with lvChecking do
+      for I := 0 to Items.Count-1 do begin
+        L := Items[I];
+        CT := TChkTrans(L.Data);
+        if MintToQuickenCatgs.TryGetValue(Uppercase(CT.Category), QuickenCatg) then begin
+          CT.Category := QuickenCatg;
+          CopyChkTransToListItem(CT, L);
+        end;
+      end;
+  finally
+    MintToQuickenCatgs.Free;
+  end;
+end;
+
+procedure TForm1.mniChaseCheckingClick(Sender: TObject);
+begin
+  ReadCSVFile('Details,Posting Date,Description,Amount,Type,Balance,Check or Slip #',
+    procedure (S: string; Trans: TChkTrans)
+    {
+    DEBIT,12/09/2016,"HI ROCKY SPORTS INC BUENA VISTA CO           12/08",-73.35,DEBIT_CARD,1741.09,,
+    }
+    var
+      Pos: Integer;
+    begin
+      Pos := 1;
+      with Trans do begin
+        GetField(S,Pos); //Details
+        Date := StrToDate(GetField(S,Pos));
+        Description := GetField(S,Pos);
+        AmountDebit := StrToAmt(GetField(S,Pos));
+        if AmountDebit > 0 then begin
+          AmountCredit := AmountDebit;
+          AmountDebit := 0;
+        end;
+      end;
+    end
+  );
+end;
+
+procedure TForm1.mniMintClick(Sender: TObject);
+begin
+
+  ReadCSVFile('"Date","Description","Original Description","Amount","Transaction Type","Category","Account Name","Labels","Notes"',
+    procedure (S: string; Trans: TChkTrans)
+    {
+    "2/15/2022","Deposit from EJ for payment to TLC","Deposit from EJ for payment to","500.00","credit","Transfer","Interest Checking","",""
+    "2/15/2022","CITI AUTOPAY - PAYMENT","External Withdrawal CITI","3242.52","debit","Transfer","Interest Checking","",""
+
+    }
+    var
+      Pos: Integer;
+    begin
+      Pos := 1;
+      with Trans do begin
+        Date := StrToDate(GetField(S,Pos));
+        Description := GetField(S,Pos);
+        Memo := GetField(S,Pos);
+        AmountDebit := StrToAmt(GetField(S,Pos));
+        if GetField(S,Pos) = 'debit' then
+          AmountDebit := -AmountDebit
+        else begin
+          AmountCredit := AmountDebit;
+          AmountDebit := 0;
+        end;
+        Category := GetField(S,Pos);
       end;
     end
   );

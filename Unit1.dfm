@@ -249,10 +249,6 @@ object Form1: TForm1
           Caption = 'FinanceWorks'
           OnClick = btnReadFinanceorksFileClick
         end
-        object mniChaseChecking: TMenuItem
-          Caption = 'Chase Checking'
-          OnClick = mniChaseCheckingClick
-        end
         object mniChaseVisa: TMenuItem
           Caption = 'Chase Visa'
           OnClick = mniChaseVisaClick
@@ -261,10 +257,18 @@ object Form1: TForm1
           Caption = 'citi Visa'
           OnClick = mniCitiVisaClick
         end
+        object mniMint: TMenuItem
+          Caption = 'Mint'
+          OnClick = mniMintClick
+        end
       end
       object mniWriteQIF: TMenuItem
         Caption = 'Write QIF'
         OnClick = btnWriteQIFClick
+      end
+      object mniConvertMintcategoriestoQuicken: TMenuItem
+        Caption = 'Convert Mint categories to Quicken'
+        OnClick = mniConvertMintcategoriestoQuickenClick
       end
       object mniExit: TMenuItem
         Caption = 'Exit'
