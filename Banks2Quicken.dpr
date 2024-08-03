@@ -1,14 +1,15 @@
 program Banks2Quicken;
 
 uses
-
   Forms,
-  Unit1 in 'Unit1.pas' {Form1};
+  frm_Main in 'frm_Main.pas' {frmMain},
+  dlg_AmazonOrder in 'dlg_AmazonOrder.pas' {dlgAmazonOrder};
 
 {$R *.RES}
 
 begin
   Application.Initialize;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TfrmMain, frmMain);
+  Application.CreateForm(TdlgAmazonOrder, dlgAmazonOrder);
   Application.Run;
 end.
